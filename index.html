@@ -364,22 +364,11 @@
                 progressCircle.style.strokeDashoffset = offset;
             }
 
-            // ======================================================================
-            // ==================== 代码修改核心区域 START ====================
-            // ======================================================================
-
-            /**
-             * 触发“离场”动画的函数，包括面板消失和粒子加速
-             */
             function triggerExitAnimation() {
                 const contentCard = document.querySelector('.content-card');
-                // 使用 cubic-bezier 创建一个“回弹”或“吸入”的弹性效果
                 contentCard.style.transition = 'opacity 0.7s ease-in, transform 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
                 contentCard.style.opacity = '0';
-                // 最终缩小为0，并带一点旋转
                 contentCard.style.transform = 'scale(0) rotate(35deg)';
-
-                // 进入最终的“穿越”加速
                 targetParticleSpeed = 100;
             }
 
@@ -395,52 +384,41 @@
                     targetParticleSpeed = minSpeed + (maxSpeed - minSpeed) * Math.pow(progress, 3);
                 }
 
-                // **修改点 1: 在倒数最后一秒触发离场动画**
                 if (countdown === 1) {
                     triggerExitAnimation();
                 }
 
-                // 当倒计时结束时，立即跳转
                 if (countdown <= 0) {
                     clearInterval(interval);
-                    // 动画在1秒前已经开始，这里直接跳转即可
                     window.location.href = redirectUrl;
                 } else {
                     countdown--;
                 }
             }
 
-            // **修改点 2: 为“立即前往”按钮添加点击事件监听器**
             manualRedirectLink.addEventListener('click', function(event) {
-                // 阻止链接的默认跳转行为
                 event.preventDefault();
-                
-                // 如果有倒计时正在进行，清除它
                 if (interval) {
                     clearInterval(interval);
                 }
-
-                // 触发与倒计时结束时相同的离场动画
                 triggerExitAnimation();
-
-                // 在动画播放后（700毫秒）进行跳转
                 setTimeout(() => {
                     window.location.href = redirectUrl;
                 }, 700);
             });
             
-            // ======================================================================
-            // ===================== 代码修改核心区域 END =====================
-            // ======================================================================
-
-
             function switchLanguage(lang) {
                 if (currentLang === lang && interval !== null) return;
                 currentLang = lang;
                 localStorage.setItem('ruixing_vpn_lang', lang);
 
                 document.querySelectorAll('[data-lang-key]').forEach(element => {
-                    const key = element.getAttribute('data-lang-key');
+                    // ======================================================================
+                    // ===================== BUG FIX: 此处是修正点 ====================
+                    // ======================================================================
+                    // 将 'data-key' 修改为正确的 'data-lang-key'
+                    const key = element.getAttribute('data-lang-key'); 
+                    // ======================================================================
                     if (translations[currentLang][key]) {
                         if (key === 'main_title') {
                             element.textContent = translations[currentLang][key];
@@ -467,13 +445,11 @@
                 particleSpeed = 2;
                 targetParticleSpeed = 2;
 
-                // 恢复面板的初始状态以便重新开始动画
                 const contentCard = document.querySelector('.content-card');
-                contentCard.style.transition = 'none'; // 先移除过渡效果
+                contentCard.style.transition = 'none';
                 contentCard.style.opacity = '1';
                 contentCard.style.transform = 'scale(1) rotate(0deg)';
                 
-                // 确保在重置后立即刷新一次UI
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
                          updateCountdown();
@@ -481,6 +457,9 @@
                     });
                 });
             }
+            
+            langZhButton.addEventListener('click', () => switchLanguage('zh'));
+            langEnButton.addEventListener('click', () => switchLanguage('en'));
             
             switchLanguage(currentLang);
             
