@@ -244,9 +244,8 @@
             // --- START: Three.js Particle Background ---
             let scene, camera, renderer, mouseX = 0, mouseY = 0;
             let stars;
-            // ====== 1. 新增 "目标速度" 变量，分离当前速度和目标速度 ======
-            let particleSpeed = 2;       // 粒子的当前实时速度
-            let targetParticleSpeed = 2; // 粒子需要达到的目标速度
+            let particleSpeed = 2;
+            let targetParticleSpeed = 2;
 
             function initParticles() {
                 try {
@@ -298,14 +297,11 @@
             function animateParticles() {
                 requestAnimationFrame(animateParticles);
                 if (!stars) return;
-
-                // ====== 2. 在动画的每一帧中，让当前速度平滑地靠近目标速度 ======
-                // 0.05 是缓动因子，数值越小越平滑，越大越快
+                
                 particleSpeed += (targetParticleSpeed - particleSpeed) * 0.05;
 
                 const positions = stars.geometry.attributes.position.array;
                 for (let i = 0; i < positions.length; i += 3) {
-                    // 使用平滑变化后的 `particleSpeed`
                     positions[i + 2] += particleSpeed;
                     if (positions[i + 2] > 1000) {
                         positions[i + 2] = -2000;
@@ -368,35 +364,48 @@
                 progressCircle.style.strokeDashoffset = offset;
             }
 
+            // ======================================================================
+            // ==================== 代码修改核心区域 START ====================
+            // ======================================================================
             function updateCountdown() {
                 countdownNumberElement.textContent = countdown;
                 const progressPercentage = ((10 - countdown) / 10) * 100;
                 setProgress(progressPercentage);
 
-                // ====== 3. 倒计时器只负责设定“目标速度”，不再直接改变速度 ======
-                if (countdown > 4) {
-                    targetParticleSpeed = 2; // 目标：慢速
-                } else if (countdown === 4) {
-                    targetParticleSpeed = 8; // 目标：开始加速
-                } else if (countdown === 3) {
-                    targetParticleSpeed = 15;
-                } else if (countdown === 2) {
-                    targetParticleSpeed = 30;
-                } else if (countdown === 1) {
-                    targetParticleSpeed = 50; // 目标：最终冲刺
+                const minSpeed = 2;
+                const maxSpeed = 70;
+                const progress = (10 - countdown) / 10;
+                if (countdown > 0) {
+                    targetParticleSpeed = minSpeed + (maxSpeed - minSpeed) * Math.pow(progress, 3);
                 }
 
+                // **修改点 1: 更酷炫的面板消失动画**
+                if (countdown === 2) {
+                    const contentCard = document.querySelector('.content-card');
+                    // 使用 cubic-bezier 创建一个“回弹”或“吸入”的弹性效果
+                    contentCard.style.transition = 'opacity 0.7s ease-in, transform 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                    contentCard.style.opacity = '0';
+                    // 最终缩小为0，并带一点旋转
+                    contentCard.style.transform = 'scale(0) rotate(35deg)';
+                }
+
+                // **修改点 2: 结尾不再拖沓，倒计时结束立即跳转**
                 if (countdown <= 0) {
                     clearInterval(interval);
-                    document.querySelector('.content-card').style.transition = 'opacity 0.5s, transform 0.5s';
-                    document.querySelector('.content-card').style.opacity = '0';
-                    document.querySelector('.content-card').style.transform = 'scale(0.9)';
+                    // 在跳转前，进行最后一次极速冲刺
+                    targetParticleSpeed = 100; 
+                    // 给出极短的100毫秒延迟，确保最后一帧的加速动画能够渲染出来，然后立即跳转
                     setTimeout(() => {
                         window.location.href = redirectUrl;
-                    }, 500);
+                    }, 100); 
+                } else {
+                    countdown--;
                 }
-                countdown--;
             }
+            // ======================================================================
+            // ===================== 代码修改核心区域 END =====================
+            // ======================================================================
+
 
             function switchLanguage(lang) {
                 if (currentLang === lang && interval !== null) return;
@@ -428,9 +437,15 @@
                     clearInterval(interval);
                 }
                 countdown = 10;
-                // ====== 4. 重置倒计时，需要同时重置两个速度变量 ======
                 particleSpeed = 2;
                 targetParticleSpeed = 2;
+
+                // 恢复面板的初始状态以便重新开始动画
+                const contentCard = document.querySelector('.content-card');
+                contentCard.style.transition = 'none'; // 先移除过渡效果
+                contentCard.style.opacity = '1';
+                contentCard.style.transform = 'scale(1) rotate(0deg)';
+
                 updateCountdown();
                 interval = setInterval(updateCountdown, 1000);
             }
