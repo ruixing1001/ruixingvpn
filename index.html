@@ -66,14 +66,23 @@
         .delay-500 { animation-delay: 0.5s; }
         .delay-600 { animation-delay: 0.6s; }
 
+        /* ====== 语言切换按钮最终优化：幽灵胶囊样式 ====== */
         .lang-button {
-            @apply px-3 py-1 text-sm font-medium rounded-full transition-all duration-300;
+            @apply px-4 py-2 text-sm font-semibold rounded-full transition-all duration-300;
+            color: rgba(255, 255, 255, 0.6); /* 默认状态为半透明灰色 */
+            background: transparent;
+            border: 1px solid transparent; /* 透明边框用于占位，防止hover时跳动 */
+            cursor: pointer;
         }
-        .lang-button.active {
-            @apply bg-white text-blue-800 shadow-lg;
+        .lang-button.active { /* 激活状态 */
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
         }
-        .lang-button:not(.active) {
-            @apply bg-white bg-opacity-10 text-white hover:bg-opacity-25 backdrop-blur-sm;
+        .lang-button:not(.active):hover { /* 非激活状态的悬停效果 */
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
         }
         
         .content-card {
@@ -189,8 +198,8 @@
 
     <div id="particle-canvas"></div>
 
-    <div class="absolute top-6 right-6 flex space-x-2 z-20">
-        <button id="lang-zh" class="lang-button active">中文</button>
+    <div class="absolute top-8 right-8 flex space-x-2 z-20">
+        <button id="lang-zh" class="lang-button">中文</button>
         <button id="lang-en" class="lang-button">English</button>
     </div>
 
@@ -233,7 +242,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // --- START: Three.js Particle Background (稳定版) ---
+            // --- START: Three.js Particle Background ---
             let scene, camera, renderer, mouseX = 0, mouseY = 0;
             let stars;
 
@@ -288,7 +297,7 @@
                 requestAnimationFrame(animateParticles);
 
                 const positions = stars.geometry.attributes.position.array;
-                const speed = 10;
+                const speed = 2; // ====== 粒子速度最终放慢版 ======
 
                 for (let i = 0; i < positions.length; i += 3) {
                     positions[i + 2] += speed;
@@ -313,7 +322,7 @@
             // --- END: Three.js Particle Background ---
 
 
-            // --- START: Countdown and Language Logic (修复版) ---
+            // --- START: Countdown and Language Logic ---
             const redirectUrl = 'https://go.ruixing.fun';
             const countdownNumberElement = document.getElementById('countdown-seconds');
             const progressCircle = document.getElementById('countdown-progress-circle');
@@ -371,6 +380,7 @@
             }
 
             function switchLanguage(lang) {
+                if (currentLang === lang) return; // 如果语言未变，则不执行任何操作
                 currentLang = lang;
                 localStorage.setItem('ruixing_vpn_lang', lang);
 
@@ -380,7 +390,7 @@
                         if (key === 'main_title') {
                             element.textContent = translations[currentLang][key];
                             element.style.color = '#FFFFFF';
-                            element.style.textShadow = '0 0 8px rgba(255, 255, 255, 0.3)';
+                            element.style.textShadow = '0 0 10px rgba(255, 255, 255, 0.4)';
                         } else if (key === 'permanent_url_tip') {
                             element.innerHTML = translations[currentLang][key];
                         } else if (element.tagName === 'A' || element.tagName === 'BUTTON') {
@@ -395,21 +405,25 @@
                 langZhButton.classList.toggle('active', lang === 'zh');
                 langEnButton.classList.toggle('active', lang === 'en');
 
-                // FIX 1: 恢复倒计时逻辑
                 if (interval) {
                     clearInterval(interval);
                 }
                 countdown = 10;
-                updateCountdown(); // 立即执行一次以显示初始数字 "10"
+                updateCountdown();
                 interval = setInterval(updateCountdown, 1000);
             }
 
             manualRedirectLink.href = redirectUrl;
+            
+            // ====== 语言切换交互最终优化：改回点击 ======
             langZhButton.addEventListener('click', () => switchLanguage('zh'));
             langEnButton.addEventListener('click', () => switchLanguage('en'));
             
-            // 确保页面加载后立即启动所有功能
             switchLanguage(currentLang);
+            // 页面加载时，手动设置一次初始的active状态
+            langZhButton.classList.toggle('active', currentLang === 'zh');
+            langEnButton.classList.toggle('active', currentLang === 'en');
+            
             // --- END: Countdown and Language Logic ---
         });
     </script>
