@@ -13,7 +13,7 @@
             margin: 0;
             padding: 0;
             overflow: hidden; /* 防止滚动条 */
-            cursor: none; /* 隐藏默认鼠标，使用自定义光标 */
+            /* cursor: none; /* 移除此行，让默认鼠标光标可见 */
         }
         .gradient-bg {
             background: linear-gradient(-45deg, #667eea, #764ba2, #ff8c00, #ff1493); /* 更柔和的渐变色 */
@@ -89,7 +89,7 @@
             transition: width 0.1s ease-out, height 0.1s ease-out, background-color 0.1s ease-out;
             box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.5); /* 强烈光晕效果 */
             z-index: 9999;
-            opacity: 0.8;
+            opacity: 0.8; /* 始终可见 */
             filter: blur(5px); /* 模糊效果 */
         }
 
@@ -308,15 +308,10 @@
                 element.style.transform = `translate(${transformX}px, ${transformY}px)`;
             });
         });
+        // 鼠标跟随光标的透明度始终为0.8，避免消失
+        cursorGlow.style.opacity = '0.8';
 
-        // 鼠标进入/离开页面时，调整光标样式
-        document.addEventListener('mouseenter', () => {
-            cursorGlow.style.opacity = '0.8';
-        });
-
-        document.addEventListener('mouseleave', () => {
-            cursorGlow.style.opacity = '0';
-        });
+        // 移除了 mouseenter 和 mouseleave 事件监听器，确保光标不会因为鼠标进出页面而隐藏
     </script>
 </body>
 </html>
