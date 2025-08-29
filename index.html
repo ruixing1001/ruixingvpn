@@ -367,6 +367,22 @@
             // ======================================================================
             // ==================== 代码修改核心区域 START ====================
             // ======================================================================
+
+            /**
+             * 触发“离场”动画的函数，包括面板消失和粒子加速
+             */
+            function triggerExitAnimation() {
+                const contentCard = document.querySelector('.content-card');
+                // 使用 cubic-bezier 创建一个“回弹”或“吸入”的弹性效果
+                contentCard.style.transition = 'opacity 0.7s ease-in, transform 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                contentCard.style.opacity = '0';
+                // 最终缩小为0，并带一点旋转
+                contentCard.style.transform = 'scale(0) rotate(35deg)';
+
+                // 进入最终的“穿越”加速
+                targetParticleSpeed = 100;
+            }
+
             function updateCountdown() {
                 countdownNumberElement.textContent = countdown;
                 const progressPercentage = ((10 - countdown) / 10) * 100;
@@ -379,29 +395,40 @@
                     targetParticleSpeed = minSpeed + (maxSpeed - minSpeed) * Math.pow(progress, 3);
                 }
 
-                // **修改点 1: 更酷炫的面板消失动画**
-                if (countdown === 2) {
-                    const contentCard = document.querySelector('.content-card');
-                    // 使用 cubic-bezier 创建一个“回弹”或“吸入”的弹性效果
-                    contentCard.style.transition = 'opacity 0.7s ease-in, transform 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
-                    contentCard.style.opacity = '0';
-                    // 最终缩小为0，并带一点旋转
-                    contentCard.style.transform = 'scale(0) rotate(35deg)';
+                // **修改点 1: 在倒数最后一秒触发离场动画**
+                if (countdown === 1) {
+                    triggerExitAnimation();
                 }
 
-                // **修改点 2: 结尾不再拖沓，倒计时结束立即跳转**
+                // 当倒计时结束时，立即跳转
                 if (countdown <= 0) {
                     clearInterval(interval);
-                    // 在跳转前，进行最后一次极速冲刺
-                    targetParticleSpeed = 100; 
-                    // 给出极短的100毫秒延迟，确保最后一帧的加速动画能够渲染出来，然后立即跳转
-                    setTimeout(() => {
-                        window.location.href = redirectUrl;
-                    }, 100); 
+                    // 动画在1秒前已经开始，这里直接跳转即可
+                    window.location.href = redirectUrl;
                 } else {
                     countdown--;
                 }
             }
+
+            // **修改点 2: 为“立即前往”按钮添加点击事件监听器**
+            manualRedirectLink.addEventListener('click', function(event) {
+                // 阻止链接的默认跳转行为
+                event.preventDefault();
+                
+                // 如果有倒计时正在进行，清除它
+                if (interval) {
+                    clearInterval(interval);
+                }
+
+                // 触发与倒计时结束时相同的离场动画
+                triggerExitAnimation();
+
+                // 在动画播放后（700毫秒）进行跳转
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 700);
+            });
+            
             // ======================================================================
             // ===================== 代码修改核心区域 END =====================
             // ======================================================================
@@ -445,15 +472,15 @@
                 contentCard.style.transition = 'none'; // 先移除过渡效果
                 contentCard.style.opacity = '1';
                 contentCard.style.transform = 'scale(1) rotate(0deg)';
-
-                updateCountdown();
-                interval = setInterval(updateCountdown, 1000);
+                
+                // 确保在重置后立即刷新一次UI
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                         updateCountdown();
+                         interval = setInterval(updateCountdown, 1000);
+                    });
+                });
             }
-
-            manualRedirectLink.href = redirectUrl;
-            
-            langZhButton.addEventListener('click', () => switchLanguage('zh'));
-            langEnButton.addEventListener('click', () => switchLanguage('en'));
             
             switchLanguage(currentLang);
             
