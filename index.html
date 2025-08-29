@@ -16,8 +16,40 @@
             padding: 0;
             overflow: hidden; /* 防止滚动条 */
             color: #ffffff;
+            cursor: none; /* 隐藏默认光标 */
         }
         
+        /* 自定义光标 */
+        #custom-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+            z-index: 9999;
+        }
+        #custom-cursor-dot {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background-color: #fff;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+        body:hover #custom-cursor, body:hover #custom-cursor-dot {
+            opacity: 1;
+        }
+        a:hover ~ #custom-cursor, button:hover ~ #custom-cursor {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
         /* 动态背景容器 */
         #particle-canvas {
             position: fixed;
@@ -29,7 +61,8 @@
         }
 
         .gradient-bg {
-            background: linear-gradient(45deg, #1a237e, #3949ab, #0d47a1, #01579b);
+            /* 更深邃、更具科技感的渐变 */
+            background: linear-gradient(45deg, #0b0f2b, #1e2a5e, #1a237e);
             background-size: 200% 200%;
             animation: gradient-animation 20s ease infinite;
         }
@@ -62,6 +95,7 @@
         .delay-300 { animation-delay: 0.3s; }
         .delay-400 { animation-delay: 0.4s; }
         .delay-500 { animation-delay: 0.5s; }
+        .delay-600 { animation-delay: 0.6s; }
 
         /* 倒计时进度条 */
         .countdown-bar {
@@ -100,9 +134,9 @@
             -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 2rem; /* 更大的圆角 */
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             position: relative;
             overflow: hidden; /* 用于发光效果 */
+            animation: pulse-border 4s ease-in-out infinite; /* 添加呼吸边框动画 */
         }
         
         /* 卡片发光效果 */
@@ -122,6 +156,12 @@
             0% { transform: translateX(-150%) skewX(-30deg); }
             100% { transform: translateX(450%) skewX(-30deg); }
         }
+        
+        /* 卡片呼吸边框动画 */
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 20px rgba(79, 195, 247, 0.3), 0 10px 40px rgba(0, 0, 0, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(79, 195, 247, 0.6), 0 10px 40px rgba(0, 0, 0, 0.2); }
+        }
 
     </style>
 </head>
@@ -138,59 +178,65 @@
 
     <!-- 主内容区 -->
     <div class="text-center p-8 md:p-12 lg:p-16 content-card max-w-2xl w-full mx-4 z-10">
-        <h1 class="text-4xl md:text-6xl font-black mb-3 animate-fade-in-up tracking-wider uppercase" data-lang-key="main_title">Ruixing VPN</h1>
-        <p class="text-lg md:text-2xl font-light mb-8 animate-fade-in-up delay-100 text-gray-200" data-lang-key="subtitle">极速连接，安全畅享，隐私无忧</p>
+        <!-- 新增 Logo -->
+        <div class="mx-auto mb-4 w-16 h-16 animate-fade-in-up">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-white">
+                <path d="M12 2L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 2ZM12 4.13L18.94 7.21V11C18.94 15.42 15.93 19.53 12 20.92C8.07 19.53 5.06 15.42 5.06 11V7.21L12 4.13ZM12 6L9 9H11V15H13V9H15L12 6Z" fill="currentColor"/>
+            </svg>
+        </div>
+        
+        <h1 class="text-4xl md:text-6xl font-black mb-3 animate-fade-in-up delay-100 tracking-widest uppercase" data-lang-key="main_title">Ruixing VPN</h1>
+        <p class="text-lg md:text-2xl font-light mb-8 animate-fade-in-up delay-200 text-gray-200" data-lang-key="subtitle">极速连接，安全畅享，隐私无忧</p>
 
-        <p id="countdown-message" class="text-md md:text-xl mb-5 font-medium animate-fade-in-up delay-200" data-lang-key="countdown_message">
+        <p id="countdown-message" class="text-md md:text-xl mb-5 font-medium animate-fade-in-up delay-300" data-lang-key="countdown_message">
             页面将在 <span id="countdown-seconds" class="text-cyan-300 font-bold">10</span> 秒后自动跳转...
         </p>
 
-        <div class="countdown-bar mb-8 animate-fade-in-up delay-300">
+        <div class="countdown-bar mb-8 animate-fade-in-up delay-400">
             <div id="countdown-progress" class="countdown-progress"></div>
         </div>
 
         <a id="manual-redirect-link" href="https://go.ruixing.fun"
-           class="inline-flex items-center gap-2 px-8 py-3 bg-white text-indigo-700 font-bold text-lg rounded-full shadow-lg hover:bg-indigo-100 hover:text-indigo-800 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 animate-fade-in-up delay-400"
+           class="inline-flex items-center gap-2 px-8 py-3 bg-white text-indigo-700 font-bold text-lg rounded-full shadow-lg hover:bg-indigo-100 hover:text-indigo-800 transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 animate-fade-in-up delay-500"
            data-lang-key="manual_redirect_button">
             <span>手动跳转</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
         </a>
+
+        <!-- 永久网址提示 (移至卡片内部) -->
+        <div class="mt-8 pt-6 border-t border-white/10 animate-fade-in-up delay-600">
+            <p class="text-sm opacity-80 font-medium" data-lang-key="permanent_url_tip">
+                请记住我们的永久网址：<a href="https://ruixing.fun" target="_blank" class="text-cyan-300 hover:underline font-semibold">ruixing.fun</a>
+            </p>
+        </div>
     </div>
 
-    <!-- 永久网址提示 (移至页面底部) -->
-    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-center w-full px-4 z-20 animate-fade-in-up delay-500">
-        <p class="text-sm opacity-70 font-medium" data-lang-key="permanent_url_tip">
-            请记住我们的永久网址：<a href="https://ruixing.fun" target="_blank" class="text-cyan-300 hover:underline font-semibold">ruixing.fun</a>
-        </p>
-    </div>
+    <!-- 自定义光标元素 -->
+    <div id="custom-cursor"></div>
+    <div id="custom-cursor-dot"></div>
 
     <script>
         // --- START: Three.js Particle Background ---
-        let scene, camera, renderer, particles;
+        let scene, camera, renderer, particles, mouseX = 0, mouseY = 0;
 
         function initParticles() {
-            // Scene
             scene = new THREE.Scene();
-
-            // Camera
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.z = 50;
 
-            // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             document.getElementById('particle-canvas').appendChild(renderer.domElement);
 
-            // Particles
             const particleCount = 5000;
             const positions = new Float32Array(particleCount * 3);
             const geometry = new THREE.BufferGeometry();
             const material = new THREE.PointsMaterial({
-                color: 0xffffff,
+                color: 0x81d4fa, // 粒子颜色调整为浅蓝色
                 size: 0.1,
                 transparent: true,
-                opacity: 0.7,
+                opacity: 0.8,
                 blending: THREE.AdditiveBlending
             });
 
@@ -201,17 +247,23 @@
             particles = new THREE.Points(geometry, material);
             scene.add(particles);
 
-            // Handle window resize
             window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('mousemove', onDocumentMouseMove, false); // 监听鼠标移动
             
-            // Start animation
             animateParticles();
+        }
+
+        function onDocumentMouseMove(event) {
+            // 将鼠标位置转换为 -1 到 1 的范围
+            mouseX = (event.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+            mouseY = (event.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
         }
 
         function animateParticles() {
             requestAnimationFrame(animateParticles);
-            particles.rotation.y += 0.0002;
-            particles.rotation.x += 0.0001;
+            // 根据鼠标位置平滑地旋转粒子
+            particles.rotation.y += (mouseX * 0.1 - particles.rotation.y) * 0.02;
+            particles.rotation.x += (-mouseY * 0.1 - particles.rotation.x) * 0.02;
             renderer.render(scene, camera);
         }
 
@@ -223,6 +275,18 @@
 
         initParticles();
         // --- END: Three.js Particle Background ---
+
+
+        // --- START: Custom Cursor ---
+        const cursor = document.getElementById('custom-cursor');
+        const cursorDot = document.getElementById('custom-cursor-dot');
+        window.addEventListener('mousemove', e => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+        });
+        // --- END: Custom Cursor ---
 
 
         // --- START: Countdown and Language Logic ---
@@ -284,7 +348,6 @@
                             countdownSecondsElement = document.getElementById('countdown-seconds');
                         }
                     } else if (element.tagName === 'A' || element.tagName === 'BUTTON') {
-                        // For buttons/links, update the inner span or text content
                         const textNode = element.querySelector('span') || element;
                         textNode.textContent = translations[currentLang][key];
                     } else {
@@ -306,7 +369,6 @@
         langZhButton.addEventListener('click', () => switchLanguage('zh'));
         langEnButton.addEventListener('click', () => switchLanguage('en'));
         
-        // Initial setup
         switchLanguage(currentLang);
         // --- END: Countdown and Language Logic ---
 
