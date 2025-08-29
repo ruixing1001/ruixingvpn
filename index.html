@@ -59,25 +59,12 @@
             animation: fade-in-up 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
 
+        .delay-100 { animation-delay: 0.1s; }
         .delay-200 { animation-delay: 0.2s; }
         .delay-300 { animation-delay: 0.3s; }
         .delay-400 { animation-delay: 0.4s; }
         .delay-500 { animation-delay: 0.5s; }
         .delay-600 { animation-delay: 0.6s; }
-
-        /* ====== 标题最终解决方案：独立样式，移除动画 ====== */
-        .main-title {
-            font-size: 2.25rem; /* 对应 text-4xl */
-            font-weight: 700; /* 对应 font-bold */
-            margin-bottom: 0.75rem; /* 对应 mb-3 */
-            color: #ffffff;
-            opacity: 1; /* 确保默认可见 */
-        }
-        @media (min-width: 768px) { /* 对应 md: */
-            .main-title {
-                font-size: 3.75rem; /* 对应 md:text-6xl */
-            }
-        }
 
         .lang-button {
             @apply px-4 py-2 text-sm font-semibold rounded-full transition-all duration-300;
@@ -217,7 +204,7 @@
 
     <div class="text-center p-8 md:p-12 lg:p-16 content-card max-w-2xl w-full mx-4 z-10">
         
-        <h1 class="main-title" data-lang-key="main_title"></h1>
+        <h1 class="text-4xl md:text-6xl font-bold mb-3 animate-fade-in-up delay-100" data-lang-key="main_title"></h1>
         
         <p class="text-lg md:text-2xl font-light mb-4 animate-fade-in-up delay-200 text-gray-200" data-lang-key="subtitle">极速连接，安全畅享，隐私无忧</p>
 
@@ -227,7 +214,7 @@
                     <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stop-color="#89f7fe" />
                         <stop offset="100%" stop-color="#66a6ff" />
-                    </linear-gradient>
+                    </linearGradient>
                 </defs>
                 <circle class="countdown-circle-bg" cx="70" cy="70" r="66"></circle>
                 <circle id="countdown-progress-circle" class="countdown-circle-progress" cx="70" cy="70" r="66"></circle>
@@ -257,6 +244,9 @@
             // --- START: Three.js Particle Background ---
             let scene, camera, renderer, mouseX = 0, mouseY = 0;
             let stars;
+            // ====== 1. 新增 "目标速度" 变量，分离当前速度和目标速度 ======
+            let particleSpeed = 2;       // 粒子的当前实时速度
+            let targetParticleSpeed = 2; // 粒子需要达到的目标速度
 
             function initParticles() {
                 try {
@@ -307,20 +297,25 @@
 
             function animateParticles() {
                 requestAnimationFrame(animateParticles);
-                const speed = 2; 
-                if (stars) {
-                    const positions = stars.geometry.attributes.position.array;
-                    for (let i = 0; i < positions.length; i += 3) {
-                        positions[i + 2] += speed;
-                        if (positions[i + 2] > 1000) {
-                            positions[i + 2] = -2000;
-                        }
+                if (!stars) return;
+
+                // ====== 2. 在动画的每一帧中，让当前速度平滑地靠近目标速度 ======
+                // 0.05 是缓动因子，数值越小越平滑，越大越快
+                particleSpeed += (targetParticleSpeed - particleSpeed) * 0.05;
+
+                const positions = stars.geometry.attributes.position.array;
+                for (let i = 0; i < positions.length; i += 3) {
+                    // 使用平滑变化后的 `particleSpeed`
+                    positions[i + 2] += particleSpeed;
+                    if (positions[i + 2] > 1000) {
+                        positions[i + 2] = -2000;
                     }
-                    stars.geometry.attributes.position.needsUpdate = true;
-                    stars.rotation.y = mouseX * 0.00005; 
-                    stars.rotation.x = mouseY * 0.00005;
-                    renderer.render(scene, camera);
                 }
+                stars.geometry.attributes.position.needsUpdate = true;
+                stars.rotation.y = mouseX * 0.00005; 
+                stars.rotation.x = mouseY * 0.00005;
+
+                renderer.render(scene, camera);
             }
 
             function onWindowResize() {
@@ -378,6 +373,19 @@
                 const progressPercentage = ((10 - countdown) / 10) * 100;
                 setProgress(progressPercentage);
 
+                // ====== 3. 倒计时器只负责设定“目标速度”，不再直接改变速度 ======
+                if (countdown > 4) {
+                    targetParticleSpeed = 2; // 目标：慢速
+                } else if (countdown === 4) {
+                    targetParticleSpeed = 8; // 目标：开始加速
+                } else if (countdown === 3) {
+                    targetParticleSpeed = 15;
+                } else if (countdown === 2) {
+                    targetParticleSpeed = 30;
+                } else if (countdown === 1) {
+                    targetParticleSpeed = 50; // 目标：最终冲刺
+                }
+
                 if (countdown <= 0) {
                     clearInterval(interval);
                     document.querySelector('.content-card').style.transition = 'opacity 0.5s, transform 0.5s';
@@ -391,7 +399,7 @@
             }
 
             function switchLanguage(lang) {
-                if (currentLang === lang && interval !== null) return; 
+                if (currentLang === lang && interval !== null) return;
                 currentLang = lang;
                 localStorage.setItem('ruixing_vpn_lang', lang);
 
@@ -400,8 +408,6 @@
                     if (translations[currentLang][key]) {
                         if (key === 'main_title') {
                             element.textContent = translations[currentLang][key];
-                            // ====== 标题最终解决方案：JS强制设定样式 ======
-                            element.style.opacity = '1';
                             element.style.color = '#FFFFFF';
                             element.style.textShadow = '0 0 10px rgba(255, 255, 255, 0.4)';
                         } else if (key === 'permanent_url_tip') {
@@ -422,6 +428,9 @@
                     clearInterval(interval);
                 }
                 countdown = 10;
+                // ====== 4. 重置倒计时，需要同时重置两个速度变量 ======
+                particleSpeed = 2;
+                targetParticleSpeed = 2;
                 updateCountdown();
                 interval = setInterval(updateCountdown, 1000);
             }
@@ -431,7 +440,6 @@
             langZhButton.addEventListener('click', () => switchLanguage('zh'));
             langEnButton.addEventListener('click', () => switchLanguage('en'));
             
-            // 页面加载时初始化
             switchLanguage(currentLang);
             
             // --- END: Countdown and Language Logic ---
